@@ -8,16 +8,24 @@ let estadoSecuencia = [];
 let coloresCeldas = [];
 
 let minDesvio = 5;
-let maxDesvio = 25;
+let maxDesvio = 50;
 let margenBorde = 0.3;
-let probabilidadDeDibujar = 0.05;
+let probabilidadDeDibujar = 0.25;
 let chanceDeNegro = 0.1;
 let margenExtra = 20;
 
+let marginX;
+let marginY;
+
 function setup() {
-  createCanvas(600, 600);
-  anchoCelda = width / columnas;
-  altoCelda = height / filas;
+  createCanvas(800, 800);
+
+  marginX = 50;
+  marginY = 50;
+
+  anchoCelda = (width - marginX * 2) / columnas;
+  altoCelda = (height - marginY * 2) / filas;
+
   background(255);
   colorMode(HSB, 360, 100, 100, 100);
 
@@ -32,37 +40,37 @@ function setup() {
       } else {
         H = random(360); S = random(60, 100); B = random(30, 98);
       }
-      coloresCeldas[i].push(color(H, S, B, 90)); 
-      ultimosPuntos[i].push(null); 
-      estadoSecuencia[i].push(null); 
+      coloresCeldas[i].push(color(H, S, B, 90));
+      ultimosPuntos[i].push(null);
+      estadoSecuencia[i].push(null);
     }
   }
 
   stroke(230);
   strokeWeight(1);
   for (let i = 0; i <= filas; i++) {
-    line(0, i * altoCelda, width, i * altoCelda);
+    line(marginX, marginY + i * altoCelda, width - marginX, marginY + i * altoCelda);
   }
   for (let j = 0; j <= columnas; j++) {
-    line(j * anchoCelda, 0, j * anchoCelda, height);
+    line(marginX + j * anchoCelda, marginY, marginX + j * anchoCelda, height - marginY);
   }
 
-  strokeWeight(1.5); 
+  strokeWeight(1.5);
 
   for (let i = 0; i < filas; i++) {
     for (let j = 0; j < columnas; j++) {
       let colorCelda = coloresCeldas[i][j];
       stroke(colorCelda);
 
-      let xMin = j * anchoCelda;
-      let yMin = i * altoCelda;
+      let xMin = marginX + j * anchoCelda;
+      let yMin = marginY + i * altoCelda;
       let xMax = xMin + anchoCelda;
       let yMax = yMin + altoCelda;
 
-      line(xMin, yMin, xMax, yMin); 
-      line(xMax, yMin, xMax, yMax); 
+      line(xMin, yMin, xMax, yMin);
+      line(xMax, yMin, xMax, yMax);
       line(xMax, yMax, xMin, yMax);
-      line(xMin, yMax, xMin, yMin); 
+      line(xMin, yMax, xMin, yMin);
       let r = floor(random(4));
       if (r === 0) {
         ultimosPuntos[i][j] = { x: xMin, y: yMin };
@@ -89,10 +97,10 @@ function draw() {
         if (random(1) < probabilidadDeDibujar) {
 
           let colorCelda = coloresCeldas[i][j];
-          stroke(colorCelda); 
+          stroke(colorCelda);
 
-          let xMin = j * anchoCelda;
-          let yMin = i * altoCelda;
+          let xMin = marginX + j * anchoCelda;
+          let yMin = marginY + i * altoCelda;
           let xMax = xMin + anchoCelda;
           let yMax = yMin + altoCelda;
 

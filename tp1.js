@@ -14,15 +14,18 @@ function setup() {
       let x = j * anchoCelda;
       let y = i * altoCelda;
 
-      stroke(0);
-      strokeWeight(1);
-      nofill();
+      let centroX = x + anchoCelda / 2;
+      let centroY = y + altoCelda / 2;
 
-      rect(x, y, anchoCelda, altoCelda);
+      stroke(0);
+      strokeWeight(2);
+      noFill();
+
+      ellipse(centroX, centroY, 15, 15);
     }
   }
 }
 
 function draw() {
-    ellipse(0, 0, 10, 10)
+
 }

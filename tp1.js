@@ -156,7 +156,7 @@ function draw() {
   }
 
   if (keyIsDown(J_KEY)) { // Quitar líneas
-      let lineasABorrar = 10; // Borra hasta 5 líneas por fotograma
+      let lineasABorrar = 50; // Borra hasta 5 líneas por fotograma
       for(let n = 0; n < lineasABorrar && lineasDesprolijas.length > 0; n++) {
         lineasDesprolijas.pop(); // Quita la última línea añadida
       }

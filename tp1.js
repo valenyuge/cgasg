@@ -6,7 +6,7 @@ let altoCelda;
 let ultimosPuntos = [];
 let estadoSecuencia = [];
 let coloresCeldas = [];
-let lineasDesprolijas = []; // <-- ¡NUEVO! Array para guardar líneas
+let lineasDesprolijas = []; 
 
 let minDesvio = 5;
 let maxDesvio = 50;
@@ -20,7 +20,7 @@ let marginY;
 
 const K_KEY = 75;
 const B_KEY = 66;
-const J_KEY = 74; // <-- Tecla J
+const J_KEY = 74;
 
 function setup() {
   createCanvas(800, 800);
@@ -42,13 +42,13 @@ function setup() {
       coloresCeldas[i].push(color(H, S, B, 90));
     }
   }
-  reiniciarEstado(); // Llama para establecer el estado inicial
+  reiniciarEstado(); 
 }
 
 function reiniciarEstado() {
   ultimosPuntos = [];
   estadoSecuencia = [];
-  lineasDesprolijas = []; // <-- Limpia las líneas desprolijas
+  lineasDesprolijas = []; 
 
   for (let i = 0; i < filas; i++) {
     ultimosPuntos.push([]);
@@ -68,7 +68,7 @@ function reiniciarEstado() {
   }
 }
 
-function agregarSegmento(i, j) {
+function calcularLinea(i, j) {
     let xMin = marginX + j * anchoCelda;
     let yMin = marginY + i * altoCelda;
     let xMax = xMin + anchoCelda;
@@ -109,9 +109,9 @@ function agregarSegmento(i, j) {
 }
 
 function draw() {
-  background(255); // <-- ¡BORRAMOS TODO EN CADA FOTOGRAMA!
+  background(255); 
 
-  // Dibujar grilla base
+  // Dibuja grilla 
   stroke(230);
   strokeWeight(1);
   for (let i = 0; i <= filas; i++) {
@@ -121,7 +121,7 @@ function draw() {
     line(marginX + j * anchoCelda, marginY, marginX + j * anchoCelda, height - marginY);
   }
 
-  // Dibujar cuadrados ordenados (siempre)
+  // Dibuja cuadrados ordenados 
   strokeWeight(1.5);
   for (let i = 0; i < filas; i++) {
     for (let j = 0; j < columnas; j++) {
@@ -136,33 +136,33 @@ function draw() {
     }
   }
 
-  // Dibujar TODAS las líneas desprolijas guardadas
+  // Dibuja las líneas desprolijas 
   strokeWeight(1);
   for(let linea of lineasDesprolijas) {
       stroke(linea.color);
       line(linea.x1, linea.y1, linea.x2, linea.y2);
   }
 
-  // --- LÓGICA DE TECLAS ---
+// Botones
 
-  if (keyIsDown(K_KEY)) { // Añadir líneas
+  if (keyIsDown(K_KEY)) { // Agregar líneas
     for (let i = 0; i < filas; i++) {
       for (let j = 0; j < columnas; j++) {
         if (random(1) < probabilidadDeDibujar) {
-            agregarSegmento(i, j);
+            calcularLinea(i, j);
         }
       }
     }
   }
 
-  if (keyIsDown(J_KEY)) { // Quitar líneas
-      let lineasABorrar = 50; // Borra hasta 5 líneas por fotograma
+  if (keyIsDown(J_KEY)) { // Borrar lineas
+      let lineasABorrar = 50; 
       for(let n = 0; n < lineasABorrar && lineasDesprolijas.length > 0; n++) {
-        lineasDesprolijas.pop(); // Quita la última línea añadida
+        lineasDesprolijas.pop(); 
       }
   }
 
-  if (keyIsDown(B_KEY)) { // Borrado total
+  if (keyIsDown(B_KEY)) { // Vuelve al inicio
     reiniciarEstado();
   }
 }

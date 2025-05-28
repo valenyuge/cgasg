@@ -10,9 +10,9 @@ let coloresCeldas = [];
 let minDesvio = 5;
 let maxDesvio = 25;
 let margenBorde = 0.3;
-let probabilidadDeDibujar = 0.15;
+let probabilidadDeDibujar = 0.05;
 let chanceDeNegro = 0.1;
-let margenExtra = 20; 
+let margenExtra = 20;
 
 function setup() {
   createCanvas(600, 600);
@@ -21,7 +21,24 @@ function setup() {
   background(255);
   colorMode(HSB, 360, 100, 100, 100);
 
-  stroke(230); 
+  for (let i = 0; i < filas; i++) {
+    ultimosPuntos.push([]);
+    estadoSecuencia.push([]);
+    coloresCeldas.push([]);
+    for (let j = 0; j < columnas; j++) {
+      let H, S, B;
+      if (random(1) < chanceDeNegro) {
+        H = 0; S = 0; B = 0;
+      } else {
+        H = random(360); S = random(60, 100); B = random(30, 98);
+      }
+      coloresCeldas[i].push(color(H, S, B, 90)); 
+      ultimosPuntos[i].push(null); 
+      estadoSecuencia[i].push(null); 
+    }
+  }
+
+  stroke(230);
   strokeWeight(1);
   for (let i = 0; i <= filas; i++) {
     line(0, i * altoCelda, width, i * altoCelda);
@@ -30,50 +47,37 @@ function setup() {
     line(j * anchoCelda, 0, j * anchoCelda, height);
   }
 
+  strokeWeight(1.5); 
+
   for (let i = 0; i < filas; i++) {
-    ultimosPuntos.push([]);
-    estadoSecuencia.push([]);
-    coloresCeldas.push([]);
     for (let j = 0; j < columnas; j++) {
+      let colorCelda = coloresCeldas[i][j];
+      stroke(colorCelda);
+
       let xMin = j * anchoCelda;
       let yMin = i * altoCelda;
       let xMax = xMin + anchoCelda;
       let yMax = yMin + altoCelda;
 
-      let startX, startY;
+      line(xMin, yMin, xMax, yMin); 
+      line(xMax, yMin, xMax, yMax); 
+      line(xMax, yMax, xMin, yMax);
+      line(xMin, yMax, xMin, yMin); 
       let r = floor(random(4));
-
       if (r === 0) {
-        startX = xMin;
-        startY = yMin;
+        ultimosPuntos[i][j] = { x: xMin, y: yMin };
       } else if (r === 1) {
-        startX = xMax;
-        startY = yMin;
+        ultimosPuntos[i][j] = { x: xMax, y: yMin };
       } else if (r === 2) {
-        startX = xMin;
-        startY = yMax;
+        ultimosPuntos[i][j] = { x: xMin, y: yMax };
       } else {
-        startX = xMax;
-        startY = yMax;
+        ultimosPuntos[i][j] = { x: xMax, y: yMax };
       }
-
-      ultimosPuntos[i].push({ x: startX, y: startY });
-      estadoSecuencia[i].push(floor(random(4)));
-
-      let H, S, B;
-      if (random(1) < chanceDeNegro) {
-          H = 0;
-          S = 0;
-          B = 0;
-      } else {
-          H = random(360);
-          S = random(60, 100);
-          B = random(30, 98);
-      }
-      coloresCeldas[i].push(color(H, S, B, 80));
+      estadoSecuencia[i][j] = floor(random(4));
     }
   }
 }
+
 
 function draw() {
   if (keyIsPressed === true) {
@@ -85,7 +89,7 @@ function draw() {
         if (random(1) < probabilidadDeDibujar) {
 
           let colorCelda = coloresCeldas[i][j];
-          stroke(colorCelda);
+          stroke(colorCelda); 
 
           let xMin = j * anchoCelda;
           let yMin = i * altoCelda;
@@ -98,21 +102,21 @@ function draw() {
           let desvioActual = random(minDesvio, maxDesvio);
 
           switch (paso) {
-            case 0: 
-              nuevoX = random(xMax - anchoCelda * margenBorde, xMax + margenExtra); 
-              nuevoY = puntoActual.y + random(-desvioActual, desvioActual); 
+            case 0:
+              nuevoX = random(xMax - anchoCelda * margenBorde, xMax + margenExtra);
+              nuevoY = puntoActual.y + random(-desvioActual, desvioActual);
               break;
-            case 1: 
-              nuevoY = random(yMax - altoCelda * margenBorde, yMax + margenExtra); 
-              nuevoX = puntoActual.x + random(-desvioActual, desvioActual); 
+            case 1:
+              nuevoY = random(yMax - altoCelda * margenBorde, yMax + margenExtra);
+              nuevoX = puntoActual.x + random(-desvioActual, desvioActual);
               break;
-            case 2: 
-              nuevoX = random(xMin - margenExtra, xMin + anchoCelda * margenBorde); 
-              nuevoY = puntoActual.y + random(-desvioActual, desvioActual); 
+            case 2:
+              nuevoX = random(xMin - margenExtra, xMin + anchoCelda * margenBorde);
+              nuevoY = puntoActual.y + random(-desvioActual, desvioActual);
               break;
-            case 3: 
-              nuevoY = random(yMin - margenExtra, yMin + altoCelda * margenBorde); 
-              nuevoX = puntoActual.x + random(-desvioActual, desvioActual); 
+            case 3:
+              nuevoY = random(yMin - margenExtra, yMin + altoCelda * margenBorde);
+              nuevoX = puntoActual.x + random(-desvioActual, desvioActual);
               break;
           }
 

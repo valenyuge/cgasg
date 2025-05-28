@@ -1,22 +1,32 @@
 <!DOCTYPE html>
-<html>
+<html lang="es">
 <head>
-  <meta charset="utf-8">
+  <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mi Grilla en p5.js</title>
 
-  <!-- PLEASE NO CHANGES BELOW THIS LINE (UNTIL I SAY SO) -->
-  <script language="javascript" type="text/javascript" src="libraries/p5.min.js"></script>
-  <script language="javascript" type="text/javascript" src="sketch_250528a.js"></script>
-  <!-- OK, YOU CAN MAKE CHANGES BELOW THIS LINE AGAIN -->
-
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.4/p5.js"></script>
   <style>
-    body {
-      padding: 0;
+    html, body {
       margin: 0;
+      padding: 0;
+      overflow: hidden; /* Evita barras de scroll si el canvas ocupa todo */
+      display: flex; /* Ayuda a centrar el canvas si es más pequeño */
+      justify-content: center;
+      align-items: center;
+      height: 100vh; /* Ocupa toda la altura */
+      background-color: #333; /* Un fondo oscuro para que resalte el canvas */
+    }
+    /* El canvas se crea dentro de 'main' por defecto en p5.js */
+    main {
+        border: 1px solid white; /* Para ver los límites del canvas */
     }
   </style>
-</head>
 
+</head>
 <body>
+
+  <script src="sketch.js"></script>
+
 </body>
 </html>

@@ -7,6 +7,9 @@ function setup() {
   createCanvas(600, 600);
   anchoCelda = width / columnas;
   altoCelda = height / filas;
+}
+
+function draw() {
   background(220);
 
   for (let i = 0; i < filas; i++) {
@@ -24,8 +27,4 @@ function setup() {
       ellipse(centroX, centroY, 15, 15);
     }
   }
-}
-
-function draw() {
-
 }

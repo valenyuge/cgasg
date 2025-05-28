@@ -1,18 +1,28 @@
 let columnas = 6;
 let filas = 6;
+let anchoCelda;
+let altoCelda;
 
 function setup() {
-    createCanvas(width, height);
-    background(255);
-    stroke(0);
-    strokeWeight(1);
-for (let i = 0; i <= columnas; i++) {
-    let x = (width / columnas) * i;
-    line (x, 0, x, height);
-}
-for (let i = 0; i <= filas; i++) {
-    // Calculamos la posición Y directamente aquí
-    let y = (height / filas) * i;
-    line(0, y, width, y);
+  createCanvas(600, 600);
+  anchoCelda = width / columnas;
+  altoCelda = height / filas;
+  background(220);
+
+  for (let i = 0; i < filas; i++) {
+    for (let j = 0; j < columnas; j++) {
+      let x = j * anchoCelda;
+      let y = i * altoCelda;
+
+      stroke(0);
+      strokeWeight(1);
+      fill(255);
+
+      rect(x, y, anchoCelda, altoCelda);
+    }
   }
+}
+
+function draw() {
+
 }

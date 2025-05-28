@@ -16,7 +16,7 @@ function setup() {
 
       stroke(0);
       strokeWeight(1);
-      fill(255);
+      nofill();
 
       rect(x, y, anchoCelda, altoCelda);
     }

@@ -24,8 +24,8 @@ const J_KEY = 74;
 
 function setup() {
   createCanvas(800, 800);
-  marginX = 50;
-  marginY = 50;
+  marginX = 100;
+  marginY = 100;
   anchoCelda = (width - marginX * 2) / columnas;
   altoCelda = (height - marginY * 2) / filas;
   colorMode(HSB, 360, 100, 100, 100);

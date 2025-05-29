@@ -33,9 +33,6 @@ function setup() {
   altoCelda = (height - margenY * 2) / filas;
   colorMode(HSB, 360, 100, 100, 100);
 
-  mic = new p5.AudioIn();
-  mic.start();
-
   for (let i = 0; i < filas; i++) {
     coloresCeldas.push([]);
     for (let j = 0; j < columnas; j++) {

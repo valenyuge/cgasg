@@ -15,22 +15,19 @@ let probabilidadDeDibujar = 0.25;
 let chanceDeNegro = 0.1;
 let margenExtra = 20;
 
-let margenX;
-let margenY;
+let marginX;
+let marginY;
 
 const K_KEY = 75;
 const B_KEY = 66;
 const J_KEY = 74;
 
-let mic;
-let amp;
-
 function setup() {
   createCanvas(800, 800);
-  margenX = 50;
-  margenY = 50;
-  anchoCelda = (width - margenX * 2) / columnas;
-  altoCelda = (height - margenY * 2) / filas;
+  marginX = 50;
+  marginY = 50;
+  anchoCelda = (width - marginX * 2) / columnas;
+  altoCelda = (height - marginY * 2) / filas;
   colorMode(HSB, 360, 100, 100, 100);
 
   for (let i = 0; i < filas; i++) {
@@ -57,8 +54,8 @@ function reiniciarEstado() {
     ultimosPuntos.push([]);
     estadoSecuencia.push([]);
     for (let j = 0; j < columnas; j++) {
-      let xMin = margenX + j * anchoCelda;
-      let yMin = margenY + i * altoCelda;
+      let xMin = marginX + j * anchoCelda;
+      let yMin = marginY + i * altoCelda;
       let xMax = xMin + anchoCelda;
       let yMax = yMin + altoCelda;
       let r = floor(random(4));
@@ -72,8 +69,8 @@ function reiniciarEstado() {
 }
 
 function calcularLinea(i, j) {
-    let xMin = margenX + j * anchoCelda;
-    let yMin = margenY + i * altoCelda;
+    let xMin = marginX + j * anchoCelda;
+    let yMin = marginY + i * altoCelda;
     let xMax = xMin + anchoCelda;
     let yMax = yMin + altoCelda;
 
@@ -113,16 +110,15 @@ function calcularLinea(i, j) {
 
 function draw() {
   background(255); 
-  amp = mic.getLevel();
 
   // Dibuja grilla 
   stroke(230);
   strokeWeight(1);
   for (let i = 0; i <= filas; i++) {
-    line(margenX, margenY + i * altoCelda, width - margenX, margenY + i * altoCelda);
+    line(marginX, marginY + i * altoCelda, width - marginX, marginY + i * altoCelda);
   }
   for (let j = 0; j <= columnas; j++) {
-    line(margenX + j * anchoCelda, margenY, margenX + j * anchoCelda, height - margenY);
+    line(marginX + j * anchoCelda, marginY, marginX + j * anchoCelda, height - marginY);
   }
 
   // Dibuja cuadrados ordenados 
@@ -131,8 +127,8 @@ function draw() {
     for (let j = 0; j < columnas; j++) {
         let colorCelda = coloresCeldas[i][j];
         stroke(colorCelda);
-        let xMin = margenX + j * anchoCelda;
-        let yMin = margenY + i * altoCelda;
+        let xMin = marginX + j * anchoCelda;
+        let yMin = marginY + i * altoCelda;
         let xMax = xMin + anchoCelda;
         let yMax = yMin + altoCelda;
         line(xMin, yMin, xMax, yMin); line(xMax, yMin, xMax, yMax);

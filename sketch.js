@@ -6,21 +6,35 @@ let altoCelda;
 let ultimosPuntos = [];
 let estadoSecuencia = [];
 let coloresCeldas = [];
-let lineasDesprolijas = []; 
+let lineasDesprolijas = [];
 
 let minDesvio = 5;
 let maxDesvio = 50;
 let margenBorde = 0.3;
-let probabilidadDeDibujar = 0.25;
+let probabilidadDeDibujar = 0.2; // Tu valor
 let chanceDeNegro = 0.1;
 let margenExtra = 20;
 
 let marginX;
 let marginY;
 
-const K_KEY = 75;
-const B_KEY = 66;
-const J_KEY = 74;
+// const B_KEY = 66; // Ya no se usa para el reset total
+
+let mic;
+let fft;
+
+let frecMinGrave = 40;
+let frecMaxGrave = 200;
+let umbralEnergiaGrave = 140;
+
+let frecMinAgudo = 1500;
+let frecMaxAgudo = 5000;
+let umbralEnergiaAguda = 40;
+
+// Nuevas variables para detección de aplauso
+let umbralAplauso = 0.25;// Para mic.getLevel() (0-1.0). ¡NECESITA AJUSTE!
+let ultimoTiempoAplauso = 0;
+let cooldownAplauso = 500; // Medio segundo de espera entre detecciones
 
 function setup() {
   createCanvas(800, 800);
@@ -29,6 +43,12 @@ function setup() {
   anchoCelda = (width - marginX * 2) / columnas;
   altoCelda = (height - marginY * 2) / filas;
   colorMode(HSB, 360, 100, 100, 100);
+
+  mic = new p5.AudioIn();
+  // mic.start() se llama en mousePressed
+
+  fft = new p5.FFT();
+  fft.setInput(mic);
 
   for (let i = 0; i < filas; i++) {
     coloresCeldas.push([]);
@@ -42,13 +62,13 @@ function setup() {
       coloresCeldas[i].push(color(H, S, B, 90));
     }
   }
-  reiniciarEstado(); 
+  reiniciarEstado();
 }
 
 function reiniciarEstado() {
   ultimosPuntos = [];
   estadoSecuencia = [];
-  lineasDesprolijas = []; 
+  lineasDesprolijas = [];
 
   for (let i = 0; i < filas; i++) {
     ultimosPuntos.push([]);
@@ -109,9 +129,8 @@ function calcularLinea(i, j) {
 }
 
 function draw() {
-  background(255); 
+  background(255);
 
-  // Dibuja grilla 
   stroke(230);
   strokeWeight(1);
   for (let i = 0; i <= filas; i++) {
@@ -121,7 +140,6 @@ function draw() {
     line(marginX + j * anchoCelda, marginY, marginX + j * anchoCelda, height - marginY);
   }
 
-  // Dibuja cuadrados ordenados 
   strokeWeight(1.5);
   for (let i = 0; i < filas; i++) {
     for (let j = 0; j < columnas; j++) {
@@ -136,33 +154,72 @@ function draw() {
     }
   }
 
-  // Dibuja las líneas desprolijas 
   strokeWeight(1);
   for(let linea of lineasDesprolijas) {
       stroke(linea.color);
       line(linea.x1, linea.y1, linea.x2, linea.y2);
   }
 
-// Botones
+  if (mic && mic.enabled) {
+    let nivelMicGeneral = mic.getLevel();
+    fft.analyze();
+    let energiaGrave = fft.getEnergy(frecMinGrave, frecMaxGrave);
+    let energiaAguda = fft.getEnergy(frecMinAgudo, frecMaxAgudo);
 
-  if (keyIsDown(K_KEY)) { // Agregar líneas
-    for (let i = 0; i < filas; i++) {
-      for (let j = 0; j < columnas; j++) {
-        if (random(1) < probabilidadDeDibujar) {
-            calcularLinea(i, j);
+    console.log("Nivel Mic:", nivelMicGeneral.toFixed(4), "Grave:", energiaGrave, "Agudo(custom):", energiaAguda);
+
+    // Detección de Aplauso para Resetear (reemplaza la tecla B)
+    if (nivelMicGeneral > umbralAplauso && millis() - ultimoTiempoAplauso > cooldownAplauso) {
+      console.log("¡APLAUSO detectado! Reiniciando...");
+      reiniciarEstado();
+      ultimoTiempoAplauso = millis();
+    } else {
+      // Lógica de dibujo y borrado gradual solo si no hubo un aplauso de reseteo
+      if (energiaGrave > umbralEnergiaGrave) {
+        for (let i = 0; i < filas; i++) {
+          for (let j = 0; j < columnas; j++) {
+            if (random(1) < probabilidadDeDibujar) {
+                calcularLinea(i, j);
+            }
+          }
         }
+      }
+
+      if (energiaAguda > umbralEnergiaAguda) {
+          let lineasABorrar = 30; // Tu valor
+          for(let n = 0; n < lineasABorrar && lineasDesprolijas.length > 0; n++) {
+              lineasDesprolijas.pop();
+          }
       }
     }
   }
+  // Ya no hay lógica para B_KEY aquí, se maneja con aplauso
+}
 
-  if (keyIsDown(J_KEY)) { // Borrar lineas
-      let lineasABorrar = 50; 
-      for(let n = 0; n < lineasABorrar && lineasDesprolijas.length > 0; n++) {
-        lineasDesprolijas.pop(); 
+function mousePressed() {
+  console.log("mousePressed fue llamado.");
+  userStartAudio().then(function() {
+    console.log("Contexto de Audio iniciado/reanudado exitosamente por userStartAudio().");
+    if (mic) {
+      if (!mic.enabled) {
+        mic.start(function() {
+          console.log("mic.start() - ÉXITO. mic.enabled AHORA ES:", mic.enabled);
+          if (mic.enabled) {
+            let initialMicLevel = mic.getLevel();
+            console.log("Nivel Mic INMEDIATO después de start:", initialMicLevel);
+          }
+        }, function(err) {
+          console.error("mic.start() - ERROR:", err);
+        });
+      } else {
+        console.log("Micrófono ya estaba habilitado (mic.enabled era true).");
+        let currentMicLevel = mic.getLevel();
+        console.log("Nivel Mic (ya habilitado):", currentMicLevel);
       }
-  }
-
-  if (keyIsDown(B_KEY)) { // Vuelve al inicio
-    reiniciarEstado();
-  }
+    } else {
+      console.error("El objeto 'mic' no está definido en mousePressed.");
+    }
+  }).catch(function(err) {
+    console.error("Error al iniciar/reanudar el Contexto de Audio:", err);
+  });
 }

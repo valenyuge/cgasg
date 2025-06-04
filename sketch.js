@@ -11,14 +11,12 @@ let lineasDesprolijas = [];
 let minDesvio = 5;
 let maxDesvio = 50;
 let margenBorde = 0.3;
-let probabilidadDeDibujar = 0.2; // Tu valor
+let probabilidadDeDibujar = 0.2; 
 let chanceDeNegro = 0.1;
 let margenExtra = 20;
 
 let marginX;
 let marginY;
-
-// const B_KEY = 66; // Ya no se usa para el reset total
 
 let mic;
 let fft;
@@ -31,10 +29,9 @@ let frecMinAgudo = 1500;
 let frecMaxAgudo = 5000;
 let umbralEnergiaAguda = 40;
 
-// Nuevas variables para detección de aplauso
-let umbralAplauso = 0.25;// Para mic.getLevel() (0-1.0). ¡NECESITA AJUSTE!
+let umbralAplauso = 0.25;
 let ultimoTiempoAplauso = 0;
-let cooldownAplauso = 500; // Medio segundo de espera entre detecciones
+let cooldownAplauso = 500; 
 
 function setup() {
   createCanvas(800, 800);
@@ -45,7 +42,6 @@ function setup() {
   colorMode(HSB, 360, 100, 100, 100);
 
   mic = new p5.AudioIn();
-  // mic.start() se llama en mousePressed
 
   fft = new p5.FFT();
   fft.setInput(mic);
@@ -168,13 +164,11 @@ function draw() {
 
     console.log("Nivel Mic:", nivelMicGeneral.toFixed(4), "Grave:", energiaGrave, "Agudo(custom):", energiaAguda);
 
-    // Detección de Aplauso para Resetear (reemplaza la tecla B)
     if (nivelMicGeneral > umbralAplauso && millis() - ultimoTiempoAplauso > cooldownAplauso) {
       console.log("¡APLAUSO detectado! Reiniciando...");
       reiniciarEstado();
       ultimoTiempoAplauso = millis();
     } else {
-      // Lógica de dibujo y borrado gradual solo si no hubo un aplauso de reseteo
       if (energiaGrave > umbralEnergiaGrave) {
         for (let i = 0; i < filas; i++) {
           for (let j = 0; j < columnas; j++) {
@@ -186,14 +180,13 @@ function draw() {
       }
 
       if (energiaAguda > umbralEnergiaAguda) {
-          let lineasABorrar = 30; // Tu valor
+          let lineasABorrar = 30; 
           for(let n = 0; n < lineasABorrar && lineasDesprolijas.length > 0; n++) {
               lineasDesprolijas.pop();
           }
       }
     }
   }
-  // Ya no hay lógica para B_KEY aquí, se maneja con aplauso
 }
 
 function mousePressed() {

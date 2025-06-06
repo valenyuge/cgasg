@@ -1,5 +1,5 @@
-let columnas = 6;
-let filas = 6;
+let columnas; // Se declaran aquí pero se asignan en setup()
+let filas;
 let anchoCelda;
 let altoCelda;
 
@@ -11,7 +11,7 @@ let lineasDesprolijas = [];
 let minDesvio = 5;
 let maxDesvio = 50;
 let margenBorde = 0.3;
-let probabilidadDeDibujar = 0.2; 
+let probabilidadDeDibujar = 0.2;
 let chanceDeNegro = 0.1;
 let margenExtra = 20;
 
@@ -31,10 +31,24 @@ let umbralEnergiaAguda = 60;
 
 let umbralAplauso = 0.4;
 let ultimoTiempoAplauso = 0;
-let cooldownAplauso = 500; 
+let cooldownAplauso = 500;
 
 function setup() {
   createCanvas(800, 800);
+
+  // --- LÓGICA PARA ELEGIR LA GRILLA ALEATORIA ---
+  let dimensionesPosibles = [
+    [6, 6],
+    [8, 8],
+    [8, 8],
+    [6, 8]
+  ];
+  let dimensionElegida = random(dimensionesPosibles); // p5.js elige un elemento al azar del array
+  filas = dimensionElegida[0];
+  columnas = dimensionElegida[1];
+  console.log("Grilla generada: " + filas + "x" + columnas); // Para saber cuál se eligió
+  // --- FIN DE LA NUEVA LÓGICA ---
+
   marginX = 100;
   marginY = 100;
   anchoCelda = (width - marginX * 2) / columnas;
@@ -162,7 +176,7 @@ function draw() {
     let energiaGrave = fft.getEnergy(frecMinGrave, frecMaxGrave);
     let energiaAguda = fft.getEnergy(frecMinAgudo, frecMaxAgudo);
 
-    console.log("Nivel Mic:", nivelMicGeneral.toFixed(4), "Grave:", energiaGrave, "Agudo(custom):", energiaAguda);
+    // console.log("Nivel Mic:", nivelMicGeneral.toFixed(4), "Grave:", energiaGrave, "Agudo(custom):", energiaAguda);
 
     if (nivelMicGeneral > umbralAplauso && millis() - ultimoTiempoAplauso > cooldownAplauso) {
       console.log("¡APLAUSO detectado! Reiniciando...");
@@ -178,9 +192,8 @@ function draw() {
           }
         }
       }
-
       if (energiaAguda > umbralEnergiaAguda) {
-          let lineasABorrar = 30; 
+          let lineasABorrar = 30;
           for(let n = 0; n < lineasABorrar && lineasDesprolijas.length > 0; n++) {
               lineasDesprolijas.pop();
           }

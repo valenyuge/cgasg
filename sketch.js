@@ -22,12 +22,12 @@ let mic;
 let fft;
 
 let frecMinGrave = 40;
-let frecMaxGrave = 200;
+let frecMaxGrave = 300;
 let umbralEnergiaGrave = 140;
 
 let frecMinAgudo = 1500;
 let frecMaxAgudo = 5000;
-let umbralEnergiaAguda = 40;
+let umbralEnergiaAguda = 60;
 
 let umbralAplauso = 0.25;
 let ultimoTiempoAplauso = 0;

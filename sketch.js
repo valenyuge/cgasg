@@ -22,7 +22,7 @@ let mic;
 let fft;
 
 let frecMinGrave = 40;
-let frecMaxGrave = 300;
+let frecMaxGrave = 400;
 let umbralEnergiaGrave = 140;
 
 let frecMinAgudo = 1500;

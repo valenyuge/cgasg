@@ -1,4 +1,4 @@
-let columnas; // Se declaran aquí pero se asignan en setup()
+let columnas;
 let filas;
 let anchoCelda;
 let altoCelda;
@@ -12,7 +12,6 @@ let minDesvio = 5;
 let maxDesvio = 50;
 let margenBorde = 0.3;
 let probabilidadDeDibujar = 0.2;
-let chanceDeNegro = 0.1;
 let margenExtra = 20;
 
 let marginX;
@@ -33,21 +32,27 @@ let umbralAplauso = 0.4;
 let ultimoTiempoAplauso = 0;
 let cooldownAplauso = 500;
 
+// Paleta de colores personalizada
+// Cada función genera un color con valores aleatorios dentro de un rango
+const recetasDeColor = [
+  () => { return color('#342A2A'); }, // Negro
+  () => { return color('#412A25'); }, // Marrón oscuro
+  () => { return color('#1F5A9A'); }, // Azul
+  () => { return color('#CE6D3C'); }, // Naranja
+  () => { return color('#B13348'); }, // Rojo
+  () => { return color('#C77BAA'); }, // Rosa
+  () => { return color('#31A091'); }, // Verde agua
+  () => { return color('#7155A2'); }  // Violeta
+];
+
 function setup() {
   createCanvas(800, 800);
 
-  // --- LÓGICA PARA ELEGIR LA GRILLA ALEATORIA ---
-  let dimensionesPosibles = [
-    [6, 6],
-    [8, 8],
-    [8, 8],
-    [6, 8]
-  ];
-  let dimensionElegida = random(dimensionesPosibles); // p5.js elige un elemento al azar del array
+  let dimensionesPosibles = [[6, 6], [8, 8], [6, 8]];
+  let dimensionElegida = random(dimensionesPosibles);
   filas = dimensionElegida[0];
   columnas = dimensionElegida[1];
-  console.log("Grilla generada: " + filas + "x" + columnas); // Para saber cuál se eligió
-  // --- FIN DE LA NUEVA LÓGICA ---
+  console.log("Grilla generada: " + filas + "x" + columnas);
 
   marginX = 100;
   marginY = 100;
@@ -56,20 +61,16 @@ function setup() {
   colorMode(HSB, 360, 100, 100, 100);
 
   mic = new p5.AudioIn();
-
   fft = new p5.FFT();
   fft.setInput(mic);
 
   for (let i = 0; i < filas; i++) {
     coloresCeldas.push([]);
     for (let j = 0; j < columnas; j++) {
-      let H, S, B;
-      if (random(1) < chanceDeNegro) {
-        H = 0; S = 0; B = 0;
-      } else {
-        H = random(360); S = random(60, 100); B = random(30, 98);
-      }
-      coloresCeldas[i].push(color(H, S, B, 90));
+      let recetaAleatoria = random(recetasDeColor);
+      let colorGenerado = recetaAleatoria();
+      colorGenerado.setAlpha(90); // Mantenemos la opacidad
+      coloresCeldas[i].push(colorGenerado);
     }
   }
   reiniciarEstado();
@@ -159,8 +160,10 @@ function draw() {
         let yMin = marginY + i * altoCelda;
         let xMax = xMin + anchoCelda;
         let yMax = yMin + altoCelda;
-        line(xMin, yMin, xMax, yMin); line(xMax, yMin, xMax, yMax);
-        line(xMax, yMax, xMin, yMax); line(xMin, yMax, xMin, yMin);
+        line(xMin, yMin, xMax, yMin);
+        line(xMax, yMin, xMax, yMax);
+        line(xMax, yMax, xMin, yMax);
+        line(xMin, yMax, xMin, yMin);
     }
   }
 
@@ -176,28 +179,24 @@ function draw() {
     let energiaGrave = fft.getEnergy(frecMinGrave, frecMaxGrave);
     let energiaAguda = fft.getEnergy(frecMinAgudo, frecMaxAgudo);
 
-    // console.log("Nivel Mic:", nivelMicGeneral.toFixed(4), "Grave:", energiaGrave, "Agudo(custom):", energiaAguda);
+    // console.log("Nivel Mic:", nivelMicGeneral.toFixed(4), "Grave:", energiaGrave, "Agudo:", energiaAguda);
 
     if (nivelMicGeneral > umbralAplauso && millis() - ultimoTiempoAplauso > cooldownAplauso) {
-      console.log("¡APLAUSO detectado! Reiniciando...");
       reiniciarEstado();
       ultimoTiempoAplauso = millis();
-    } else {
-      if (energiaGrave > umbralEnergiaGrave) {
-        for (let i = 0; i < filas; i++) {
-          for (let j = 0; j < columnas; j++) {
-            if (random(1) < probabilidadDeDibujar) {
-                calcularLinea(i, j);
-            }
+    } else if (energiaGrave > umbralEnergiaGrave) {
+      for (let i = 0; i < filas; i++) {
+        for (let j = 0; j < columnas; j++) {
+          if (random(1) < probabilidadDeDibujar) {
+              calcularLinea(i, j);
           }
         }
       }
-      if (energiaAguda > umbralEnergiaAguda) {
-          let lineasABorrar = 30;
-          for(let n = 0; n < lineasABorrar && lineasDesprolijas.length > 0; n++) {
-              lineasDesprolijas.pop();
-          }
-      }
+    } else if (energiaAguda > umbralEnergiaAguda) {
+        let lineasABorrar = 30;
+        for(let n = 0; n < lineasABorrar && lineasDesprolijas.length > 0; n++) {
+            lineasDesprolijas.pop();
+        }
     }
   }
 }
@@ -217,10 +216,6 @@ function mousePressed() {
         }, function(err) {
           console.error("mic.start() - ERROR:", err);
         });
-      } else {
-        console.log("Micrófono ya estaba habilitado (mic.enabled era true).");
-        let currentMicLevel = mic.getLevel();
-        console.log("Nivel Mic (ya habilitado):", currentMicLevel);
       }
     } else {
       console.error("El objeto 'mic' no está definido en mousePressed.");

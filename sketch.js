@@ -27,9 +27,9 @@ let umbralEnergiaGrave = 120;
 
 let frecMinAgudo = 1500;
 let frecMaxAgudo = 5000;
-let umbralEnergiaAguda = 25;
+let umbralEnergiaAguda = 30;
 
-let umbralAplauso = 0.25;
+let umbralAplauso = 0.4;
 let ultimoTiempoAplauso = 0;
 let cooldownAplauso = 500;
 

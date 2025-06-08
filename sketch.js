@@ -20,19 +20,23 @@ let marginY;
 let mic;
 let fft;
 
-// Estos son los valores que vamos a configurar
+//Voz grave
 let frecMinGrave = 40;
 let frecMaxGrave = 800;
-let umbralEnergiaGrave = 120;
+let umbralEnergiaGrave = 120; 
 
+//Silbido
 let frecMinAgudo = 1500;
 let frecMaxAgudo = 5000;
-let umbralEnergiaAguda = 30;
+let umbralEnergiaAguda = 30; 
 
-let umbralAplauso = 0.4;
+//Aplauso
+let umbralGraveParaAplauso = 110;  
+let umbralAgudoParaAplauso = 110;
 let ultimoTiempoAplauso = 0;
 let cooldownAplauso = 500;
 
+//colores
 const recetasDeColor = [
   () => { return color('#342A2A'); },
   () => { return color('#412A25'); },
@@ -49,11 +53,12 @@ function setup() {
   mic = new p5.AudioIn();
   fft = new p5.FFT();
   fft.setInput(mic);
-  reconfigurarYReiniciarGrilla();
+  
+  ReiniciarGrilla();
 }
 
-function reconfigurarYReiniciarGrilla() {
-  let dimensionesPosibles = [[6, 6], [8, 8], [6, 8]];
+function ReiniciarGrilla() {
+  let dimensionesPosibles = [[6, 6], [8, 8], [6, 8], [6, 10]];
   let dimensionElegida = random(dimensionesPosibles);
   filas = dimensionElegida[0];
   columnas = dimensionElegida[1];
@@ -79,7 +84,7 @@ function reconfigurarYReiniciarGrilla() {
       coloresCeldas[i].push(colorGenerado);
     }
   }
-
+  
   ultimosPuntos = [];
   estadoSecuencia = [];
   lineasDesprolijas = [];
@@ -162,10 +167,8 @@ function draw() {
         let yMin = marginY + i * altoCelda;
         let xMax = xMin + anchoCelda;
         let yMax = yMin + altoCelda;
-        line(xMin, yMin, xMax, yMin);
-        line(xMax, yMin, xMax, yMax);
-        line(xMax, yMax, xMin, yMax);
-        line(xMin, yMax, xMin, yMin);
+        line(xMin, yMin, xMax, yMin); line(xMax, yMin, xMax, yMax);
+        line(xMax, yMax, xMin, yMax); line(xMin, yMax, xMin, yMin);
     }
   }
 
@@ -176,16 +179,15 @@ function draw() {
   }
 
   if (mic && mic.enabled) {
-    let nivelMicGeneral = mic.getLevel();
     fft.analyze();
     let energiaGrave = fft.getEnergy(frecMinGrave, frecMaxGrave);
     let energiaAguda = fft.getEnergy(frecMinAgudo, frecMaxAgudo);
 
-    // Esta es la línea que necesitas para testear
-    console.log("Nivel Mic:", nivelMicGeneral.toFixed(4), "Grave:", energiaGrave, "Agudo:", energiaAguda);
+    // calibrar sonido
+    //console.log("Grave:", energiaGrave, "Agudo:", energiaAguda);
 
-    if (nivelMicGeneral > umbralAplauso && millis() - ultimoTiempoAplauso > cooldownAplauso) {
-      reconfigurarYReiniciarGrilla();
+    if (energiaGrave > umbralGraveParaAplauso && energiaAguda > umbralAgudoParaAplauso && millis() - ultimoTiempoAplauso > cooldownAplauso) {
+      ReiniciarGrilla();
       ultimoTiempoAplauso = millis();
     } else if (energiaGrave > umbralEnergiaGrave) {
       for (let i = 0; i < filas; i++) {

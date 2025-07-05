@@ -11,32 +11,27 @@ let lineasDesprolijas = [];
 let minDesvio = 5;
 let maxDesvio = 50;
 let margenBorde = 0.3;
-let probabilidadDeDibujar = 0.2;
 let margenExtra = 20;
 
 let marginX;
 let marginY;
 
 let mic;
-let fft;
+let pitch;
+let audioContext;
 
-//Voz grave
-let frecMinGrave = 40;
-let frecMaxGrave = 800;
-let umbralEnergiaGrave = 120; 
+let frecuencia = 0;
 
-//Silbido
-let frecMinAgudo = 1500;
-let frecMaxAgudo = 5000;
-let umbralEnergiaAguda = 30; 
+// --- Parámetros de Control ---
+let frecMinVoz = 80;
+let frecMaxVoz = 480;
+let ampMin = 0.01;
+let frecMinSilbido = 1200;
 
-//Aplauso
-let umbralGraveParaAplauso = 110;  
-let umbralAgudoParaAplauso = 110;
+let umbralAplauso = 0.3;
 let ultimoTiempoAplauso = 0;
 let cooldownAplauso = 500;
 
-//colores
 const recetasDeColor = [
   () => { return color('#342A2A'); },
   () => { return color('#412A25'); },
@@ -50,14 +45,39 @@ const recetasDeColor = [
 
 function setup() {
   createCanvas(800, 800);
+  audioContext = getAudioContext();
   mic = new p5.AudioIn();
-  fft = new p5.FFT();
-  fft.setInput(mic);
-  
-  ReiniciarGrilla();
+  reconfigurarYReiniciarGrilla();
 }
 
-function ReiniciarGrilla() {
+function mousePressed() {
+  if (getAudioContext().state !== 'running') {
+    getAudioContext().resume();
+  }
+  if (mic && !mic.enabled) {
+    mic.start(iniciarModeloML5, (err) => {
+      console.error(err);
+    });
+  }
+}
+
+function iniciarModeloML5() {
+  const modelURL = 'https://cdn.jsdelivr.net/gh/ml5js/ml5-data-and-models/models/pitch-detection/crepe/';
+  pitch = ml5.pitchDetection(modelURL, audioContext, mic.stream, modeloCargado);
+}
+
+function modeloCargado() {
+  obtenerTono();
+}
+
+function obtenerTono() {
+  pitch.getPitch(function(err, freq) {
+    frecuencia = freq || 0;
+    obtenerTono();
+  });
+}
+
+function reconfigurarYReiniciarGrilla() {
   let dimensionesPosibles = [[6, 6], [8, 8], [6, 8], [6, 10]];
   let dimensionElegida = random(dimensionesPosibles);
   filas = dimensionElegida[0];
@@ -107,57 +127,40 @@ function ReiniciarGrilla() {
 }
 
 function calcularLinea(i, j) {
+    if (i < 0 || i >= filas || j < 0 || j >= columnas) { return; }
     let xMin = marginX + j * anchoCelda;
     let yMin = marginY + i * altoCelda;
     let xMax = xMin + anchoCelda;
     let yMax = yMin + altoCelda;
-
     let puntoActual = ultimosPuntos[i][j];
     let paso = estadoSecuencia[i][j];
     let nuevoX, nuevoY;
     let desvioActual = random(minDesvio, maxDesvio);
-
     switch (paso) {
-        case 0:
-            nuevoX = random(xMax - anchoCelda * margenBorde, xMax + margenExtra);
-            nuevoY = puntoActual.y + random(-desvioActual, desvioActual);
-            break;
-        case 1:
-            nuevoY = random(yMax - altoCelda * margenBorde, yMax + margenExtra);
-            nuevoX = puntoActual.x + random(-desvioActual, desvioActual);
-            break;
-        case 2:
-            nuevoX = random(xMin - margenExtra, xMin + anchoCelda * margenBorde);
-            nuevoY = puntoActual.y + random(-desvioActual, desvioActual);
-            break;
-        case 3:
-            nuevoY = random(yMin - margenExtra, yMin + altoCelda * margenBorde);
-            nuevoX = puntoActual.x + random(-desvioActual, desvioActual);
-            break;
+        case 0: nuevoX = random(xMax - anchoCelda * margenBorde, xMax + margenExtra); nuevoY = puntoActual.y + random(-desvioActual, desvioActual); break;
+        case 1: nuevoY = random(yMax - altoCelda * margenBorde, yMax + margenExtra); nuevoX = puntoActual.x + random(-desvioActual, desvioActual); break;
+        case 2: nuevoX = random(xMin - margenExtra, xMin + anchoCelda * margenBorde); nuevoY = puntoActual.y + random(-desvioActual, desvioActual); break;
+        case 3: nuevoY = random(yMin - margenExtra, yMin + altoCelda * margenBorde); nuevoX = puntoActual.x + random(-desvioActual, desvioActual); break;
     }
-
     lineasDesprolijas.push({
         x1: puntoActual.x, y1: puntoActual.y,
         x2: nuevoX, y2: nuevoY,
         color: coloresCeldas[i][j]
     });
-
     ultimosPuntos[i][j] = { x: nuevoX, y: nuevoY };
     estadoSecuencia[i][j] = (paso + 1) % 4;
 }
 
 function draw() {
   background(255);
-
   stroke(230);
   strokeWeight(1);
   for (let i = 0; i <= filas; i++) {
-    line(marginX, marginY + i * altoCelda, width - marginX, marginY + i * altoCelda);
+    line(marginX, marginY + i * altoCelda, marginX + columnas * anchoCelda, marginY + i * altoCelda);
   }
   for (let j = 0; j <= columnas; j++) {
-    line(marginX + j * anchoCelda, marginY, marginX + j * anchoCelda, height - marginY);
+    line(marginX + j * anchoCelda, marginY, marginX + j * anchoCelda, marginY + filas * altoCelda);
   }
-
   strokeWeight(1.5);
   for (let i = 0; i < filas; i++) {
     for (let j = 0; j < columnas; j++) {
@@ -171,49 +174,54 @@ function draw() {
         line(xMax, yMax, xMin, yMax); line(xMin, yMax, xMin, yMin);
     }
   }
-
   strokeWeight(1);
   for(let linea of lineasDesprolijas) {
       stroke(linea.color);
       line(linea.x1, linea.y1, linea.x2, linea.y2);
   }
 
-  if (mic && mic.enabled) {
-    fft.analyze();
-    let energiaGrave = fft.getEnergy(frecMinGrave, frecMaxGrave);
-    let energiaAguda = fft.getEnergy(frecMinAgudo, frecMaxAgudo);
-
-    // calibrar sonido
-    //console.log("Grave:", energiaGrave, "Agudo:", energiaAguda);
-
-    if (energiaGrave > umbralGraveParaAplauso && energiaAguda > umbralAgudoParaAplauso && millis() - ultimoTiempoAplauso > cooldownAplauso) {
-      ReiniciarGrilla();
+  if (mic && mic.enabled && pitch) {
+    let nivelMicGeneral = mic.getLevel();
+    
+    if (nivelMicGeneral > umbralAplauso && millis() - ultimoTiempoAplauso > cooldownAplauso) {
+      reconfigurarYReiniciarGrilla();
       ultimoTiempoAplauso = millis();
-    } else if (energiaGrave > umbralEnergiaGrave) {
-      for (let i = 0; i < filas; i++) {
-        for (let j = 0; j < columnas; j++) {
-          if (random(1) < probabilidadDeDibujar) {
-              calcularLinea(i, j);
-          }
-        }
-      }
-    } else if (energiaAguda > umbralEnergiaAguda) {
+    } else if (frecuencia > frecMinSilbido) {
         let lineasABorrar = 30;
         for(let n = 0; n < lineasABorrar && lineasDesprolijas.length > 0; n++) {
             lineasDesprolijas.pop();
         }
-    }
-  }
-}
+    } else if (nivelMicGeneral > ampMin && frecuencia > frecMinVoz && frecuencia < frecMaxVoz) {
+      
+      let numColumnasCentrales;
+      if (columnas === 6) {
+        numColumnasCentrales = 2;
+      } else { // Cubre los casos de 8 y 10 columnas
+        numColumnasCentrales = 4;
+      }
 
-function mousePressed() {
-  userStartAudio().then(function() {
-    if (mic) {
-      if (!mic.enabled) {
-        mic.start(() => {}, (err) => { console.error(err); });
+      let frecMedia = frecMinVoz + (frecMaxVoz - frecMinVoz) / 2;
+      let centroX = (columnas - 1) / 2;
+      let colDestino;
+
+      if (frecuencia < frecMedia) {
+        // --- VOZ GRAVE: Dibuja en una de las columnas centrales ---
+        let indiceInicioCentral = (columnas - numColumnasCentrales) / 2;
+        colDestino = floor(random(indiceInicioCentral, indiceInicioCentral + numColumnasCentrales));
+      } else {
+        // --- VOZ AGUDA: Dibuja en una de las columnas laterales ---
+        let numColumnasLaterales = (columnas - numColumnasCentrales) / 2;
+        if (random(1) < 0.5) { // Lado izquierdo
+          colDestino = floor(random(0, numColumnasLaterales));
+        } else { // Lado derecho
+          colDestino = floor(random(columnas - numColumnasLaterales, columnas));
+        }
+      }
+      
+      // Dibuja en toda la columna seleccionada
+      for (let i = 0; i < filas; i++) {
+          calcularLinea(i, colDestino);
       }
     }
-  }).catch(function(err) {
-    console.error("Error al iniciar/reanudar el Contexto de Audio:", err);
-  });
+  }
 }

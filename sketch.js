@@ -13,7 +13,7 @@ let maxDesvio = 50;
 let margenBorde = 0.3;
 let margenExtra = 20;
 
-let probabilidadDeDibujar = 0.3;
+let probabilidadDeDibujar = 0.4;
 
 let marginX;
 let marginY;

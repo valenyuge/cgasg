@@ -7,13 +7,15 @@ let ultimosPuntos = [];
 let estadoSecuencia = [];
 let coloresCeldas = [];
 let lineasDesprolijas = [];
+let conteoLineasPorCelda = [];
 
-let maxLineasPorCelda = 120;
+let maxLineasPorCelda = 150;
 let minDesvio = 5;
 let maxDesvio = 50;
 let margenBorde = 0.3;
 let margenExtra = 20;
 let probabilidadDeDibujar = 0.4;
+let dibujarCuadradosBase; 
 
 let marginX;
 let marginY;
@@ -90,6 +92,8 @@ function reconfigurarYReiniciarGrilla() {
   let dimensionElegida = random(dimensionesPosibles);
   filas = dimensionElegida[0];
   columnas = dimensionElegida[1];
+  
+  dibujarCuadradosBase = random(1) < 0.5; 
 
   let marginX_inicial = 100;
   let marginY_inicial = 100;
@@ -107,16 +111,17 @@ function reconfigurarYReiniciarGrilla() {
   ultimosPuntos = [];
   estadoSecuencia = [];
   lineasDesprolijas = [];
+  conteoLineasPorCelda = [];
 
   for (let i = 0; i < filas; i++) {
     coloresCeldas.push([]);
     ultimosPuntos.push([]);
     estadoSecuencia.push([]);
-    lineasDesprolijas.push([]);
+    conteoLineasPorCelda.push([]);
 
     for (let j = 0; j < columnas; j++) {
       coloresCeldas[i].push(random(recetasDeColor)());
-      lineasDesprolijas[i].push([]);
+      conteoLineasPorCelda[i].push(0);
 
       let xMin = marginX + j * anchoCelda;
       let yMin = marginY + i * altoCelda;
@@ -135,8 +140,12 @@ function reconfigurarYReiniciarGrilla() {
 function calcularLinea(i, j) {
     if (i < 0 || i >= filas || j < 0 || j >= columnas) { return; }
     
-    if (lineasDesprolijas[i][j].length >= maxLineasPorCelda) {
-        lineasDesprolijas[i][j].shift();
+    if (conteoLineasPorCelda[i][j] >= maxLineasPorCelda) {
+        const indiceABorrar = lineasDesprolijas.findIndex(linea => linea.i === i && linea.j === j);
+        if (indiceABorrar !== -1) {
+            lineasDesprolijas.splice(indiceABorrar, 1);
+            conteoLineasPorCelda[i][j]--;
+        }
     }
 
     let xMin = marginX + j * anchoCelda;
@@ -153,47 +162,51 @@ function calcularLinea(i, j) {
         case 2: nuevoX = random(xMin - margenExtra, xMin + anchoCelda * margenBorde); nuevoY = puntoActual.y + random(-desvioActual, desvioActual); break;
         case 3: nuevoY = random(yMin - margenExtra, yMin + altoCelda * margenBorde); nuevoX = puntoActual.x + random(-desvioActual, desvioActual); break;
     }
-    lineasDesprolijas[i][j].push({
+    
+    lineasDesprolijas.push({
         x1: puntoActual.x, y1: puntoActual.y,
         x2: nuevoX, y2: nuevoY,
-        color: coloresCeldas[i][j]
+        color: coloresCeldas[i][j],
+        i: i,
+        j: j
     });
+    conteoLineasPorCelda[i][j]++;
+
     ultimosPuntos[i][j] = { x: nuevoX, y: nuevoY };
     estadoSecuencia[i][j] = (paso + 1) % 4;
 }
 
 function draw() {
   background(255);
-  stroke(230);
-  strokeWeight(1);
-  for (let i = 0; i <= filas; i++) {
-    line(marginX, marginY + i * altoCelda, marginX + columnas * anchoCelda, marginY + i * altoCelda);
-  }
-  for (let j = 0; j <= columnas; j++) {
-    line(marginX + j * anchoCelda, marginY, marginX + j * anchoCelda, marginY + filas * altoCelda);
-  }
-  strokeWeight(1.5);
-  for (let i = 0; i < filas; i++) {
-    for (let j = 0; j < columnas; j++) {
-        let colorCelda = coloresCeldas[i][j];
-        stroke(colorCelda);
-        let xMin = marginX + j * anchoCelda;
-        let yMin = marginY + i * altoCelda;
-        let xMax = xMin + anchoCelda;
-        let yMax = yMin + altoCelda;
-        line(xMin, yMin, xMax, yMin); line(xMax, yMin, xMax, yMax);
-        line(xMax, yMax, xMin, yMax); line(xMin, yMax, xMin, yMin);
+  
+  if (dibujarCuadradosBase) {
+    stroke(230);
+    strokeWeight(1);
+    for (let i = 0; i <= filas; i++) {
+      line(marginX, marginY + i * altoCelda, marginX + columnas * anchoCelda, marginY + i * altoCelda);
+    }
+    for (let j = 0; j <= columnas; j++) {
+      line(marginX + j * anchoCelda, marginY, marginX + j * anchoCelda, marginY + filas * altoCelda);
+    }
+    strokeWeight(1.5);
+    for (let i = 0; i < filas; i++) {
+      for (let j = 0; j < columnas; j++) {
+          let colorCelda = coloresCeldas[i][j];
+          stroke(colorCelda);
+          let xMin = marginX + j * anchoCelda;
+          let yMin = marginY + i * altoCelda;
+          let xMax = xMin + anchoCelda;
+          let yMax = yMin + altoCelda;
+          line(xMin, yMin, xMax, yMin); line(xMax, yMin, xMax, yMax);
+          line(xMax, yMax, xMin, yMax); line(xMin, yMax, xMin, yMin);
+      }
     }
   }
-  strokeWeight(1);
 
-  for (let i = 0; i < filas; i++) {
-      for (let j = 0; j < columnas; j++) {
-          for (const linea of lineasDesprolijas[i][j]) {
-              stroke(linea.color);
-              line(linea.x1, linea.y1, linea.x2, linea.y2);
-          }
-      }
+  strokeWeight(1);
+  for(let linea of lineasDesprolijas) {
+      stroke(linea.color);
+      line(linea.x1, linea.y1, linea.x2, linea.y2);
   }
 
   if (mic && mic.enabled && pitch && fft) {
@@ -205,21 +218,15 @@ function draw() {
       reconfigurarYReiniciarGrilla();
       ultimoTiempoAplauso = millis();
     } else if (frecuenciaSuavizada > frecMinSilbido) {
-      let lineasABorrar = 30;
-      for (let n = 0; n < lineasABorrar; n++) {
-        let celdasConLineas = [];
-        for (let i = 0; i < filas; i++) {
-            for (let j = 0; j < columnas; j++) {
-                if (lineasDesprolijas[i][j].length > 0) {
-                    celdasConLineas.push(lineasDesprolijas[i][j]);
+        let lineasABorrar = 30;
+        for (let n = 0; n < lineasABorrar; n++) {
+            if (lineasDesprolijas.length > 0) {
+                let lineaBorrada = lineasDesprolijas.pop();
+                if (lineaBorrada) {
+                    conteoLineasPorCelda[lineaBorrada.i][lineaBorrada.j]--;
                 }
             }
         }
-        if (celdasConLineas.length > 0) {
-            let listaAleatoria = random(celdasConLineas);
-            listaAleatoria.shift(); // Borra la línea MÁS ANTIGUA de esa celda
-        }
-      }
     } else if (mic.getLevel() > ampMin && frecuenciaSuavizada > frecMinVoz && frecuenciaSuavizada < frecMaxVoz) {
       let frecMedia = frecMinVoz + (frecMaxVoz - frecMinVoz) / 2;
       let numColumnasCentrales;

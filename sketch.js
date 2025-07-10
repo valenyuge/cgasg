@@ -22,7 +22,6 @@ let audioContext;
 
 let frecuencia = 0;
 
-// --- Parámetros de Control ---
 let frecMinVoz = 80;
 let frecMaxVoz = 480;
 let ampMin = 0.01;
@@ -196,7 +195,7 @@ function draw() {
       let numColumnasCentrales;
       if (columnas === 6) {
         numColumnasCentrales = 2;
-      } else { // Cubre los casos de 8 y 10 columnas
+      } else { 
         numColumnasCentrales = 4;
       }
 
@@ -205,20 +204,17 @@ function draw() {
       let colDestino;
 
       if (frecuencia < frecMedia) {
-        // --- VOZ GRAVE: Dibuja en una de las columnas centrales ---
         let indiceInicioCentral = (columnas - numColumnasCentrales) / 2;
         colDestino = floor(random(indiceInicioCentral, indiceInicioCentral + numColumnasCentrales));
       } else {
-        // --- VOZ AGUDA: Dibuja en una de las columnas laterales ---
         let numColumnasLaterales = (columnas - numColumnasCentrales) / 2;
-        if (random(1) < 0.5) { // Lado izquierdo
+        if (random(1) < 0.5) { 
           colDestino = floor(random(0, numColumnasLaterales));
-        } else { // Lado derecho
+        } else {
           colDestino = floor(random(columnas - numColumnasLaterales, columnas));
         }
       }
       
-      // Dibuja en toda la columna seleccionada
       for (let i = 0; i < filas; i++) {
           calcularLinea(i, colDestino);
       }

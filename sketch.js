@@ -8,11 +8,11 @@ let estadoSecuencia = [];
 let coloresCeldas = [];
 let lineasDesprolijas = [];
 
+let maxLineasPorCelda = 120;
 let minDesvio = 5;
 let maxDesvio = 50;
 let margenBorde = 0.3;
 let margenExtra = 20;
-
 let probabilidadDeDibujar = 0.4;
 
 let marginX;
@@ -21,17 +21,19 @@ let marginY;
 let mic;
 let pitch;
 let audioContext;
-let fft; 
+let fft;
 
 let frecuencia = 0;
+let frecuenciaSuavizada = 0;
+let amortiguacionFrec = 0.8;
 
 let frecMinVoz = 80;
 let frecMaxVoz = 300;
 let ampMin = 0.01;
 let frecMinSilbido = 1200;
 
-let umbralGraveParaAplauso = 140; 
-let umbralAgudoParaAplauso = 30;  
+let umbralGraveParaAplauso = 140;
+let umbralAgudoParaAplauso = 30;
 let ultimoTiempoAplauso = 0;
 let cooldownAplauso = 500;
 
@@ -78,6 +80,7 @@ function modeloCargado() {
 function obtenerTono() {
   pitch.getPitch(function(err, freq) {
     frecuencia = freq || 0;
+    frecuenciaSuavizada = frecuenciaSuavizada * amortiguacionFrec + frecuencia * (1 - amortiguacionFrec);
     obtenerTono();
   });
 }
@@ -87,7 +90,7 @@ function reconfigurarYReiniciarGrilla() {
   let dimensionElegida = random(dimensionesPosibles);
   filas = dimensionElegida[0];
   columnas = dimensionElegida[1];
-  
+
   let marginX_inicial = 100;
   let marginY_inicial = 100;
   let areaDibujoAncho = width - marginX_inicial * 2;
@@ -101,22 +104,20 @@ function reconfigurarYReiniciarGrilla() {
   marginY = marginY_inicial + (areaDibujoAlto - altoTotalGrilla) / 2;
 
   coloresCeldas = [];
-  for (let i = 0; i < filas; i++) {
-    coloresCeldas.push([]);
-    for (let j = 0; j < columnas; j++) {
-      let recetaAleatoria = random(recetasDeColor);
-      let colorGenerado = recetaAleatoria();
-      coloresCeldas[i].push(colorGenerado);
-    }
-  }
-  
   ultimosPuntos = [];
   estadoSecuencia = [];
   lineasDesprolijas = [];
+
   for (let i = 0; i < filas; i++) {
+    coloresCeldas.push([]);
     ultimosPuntos.push([]);
     estadoSecuencia.push([]);
+    lineasDesprolijas.push([]);
+
     for (let j = 0; j < columnas; j++) {
+      coloresCeldas[i].push(random(recetasDeColor)());
+      lineasDesprolijas[i].push([]);
+
       let xMin = marginX + j * anchoCelda;
       let yMin = marginY + i * altoCelda;
       let xMax = xMin + anchoCelda;
@@ -133,6 +134,11 @@ function reconfigurarYReiniciarGrilla() {
 
 function calcularLinea(i, j) {
     if (i < 0 || i >= filas || j < 0 || j >= columnas) { return; }
+    
+    if (lineasDesprolijas[i][j].length >= maxLineasPorCelda) {
+        lineasDesprolijas[i][j].shift();
+    }
+
     let xMin = marginX + j * anchoCelda;
     let yMin = marginY + i * altoCelda;
     let xMax = xMin + anchoCelda;
@@ -147,7 +153,7 @@ function calcularLinea(i, j) {
         case 2: nuevoX = random(xMin - margenExtra, xMin + anchoCelda * margenBorde); nuevoY = puntoActual.y + random(-desvioActual, desvioActual); break;
         case 3: nuevoY = random(yMin - margenExtra, yMin + altoCelda * margenBorde); nuevoX = puntoActual.x + random(-desvioActual, desvioActual); break;
     }
-    lineasDesprolijas.push({
+    lineasDesprolijas[i][j].push({
         x1: puntoActual.x, y1: puntoActual.y,
         x2: nuevoX, y2: nuevoY,
         color: coloresCeldas[i][j]
@@ -180,9 +186,14 @@ function draw() {
     }
   }
   strokeWeight(1);
-  for(let linea of lineasDesprolijas) {
-      stroke(linea.color);
-      line(linea.x1, linea.y1, linea.x2, linea.y2);
+
+  for (let i = 0; i < filas; i++) {
+      for (let j = 0; j < columnas; j++) {
+          for (const linea of lineasDesprolijas[i][j]) {
+              stroke(linea.color);
+              line(linea.x1, linea.y1, linea.x2, linea.y2);
+          }
+      }
   }
 
   if (mic && mic.enabled && pitch && fft) {
@@ -193,13 +204,23 @@ function draw() {
     if (energiaGrave > umbralGraveParaAplauso && energiaAguda > umbralAgudoParaAplauso && millis() - ultimoTiempoAplauso > cooldownAplauso) {
       reconfigurarYReiniciarGrilla();
       ultimoTiempoAplauso = millis();
-    } else if (frecuencia > frecMinSilbido) {
-        let lineasABorrar = 30;
-        for(let n = 0; n < lineasABorrar && lineasDesprolijas.length > 0; n++) {
-            lineasDesprolijas.pop();
+    } else if (frecuenciaSuavizada > frecMinSilbido) {
+      let lineasABorrar = 30;
+      for (let n = 0; n < lineasABorrar; n++) {
+        let celdasConLineas = [];
+        for (let i = 0; i < filas; i++) {
+            for (let j = 0; j < columnas; j++) {
+                if (lineasDesprolijas[i][j].length > 0) {
+                    celdasConLineas.push(lineasDesprolijas[i][j]);
+                }
+            }
         }
-    } else if (mic.getLevel() > ampMin && frecuencia > frecMinVoz && frecuencia < frecMaxVoz) {
-      
+        if (celdasConLineas.length > 0) {
+            let listaAleatoria = random(celdasConLineas);
+            listaAleatoria.shift(); // Borra la línea MÁS ANTIGUA de esa celda
+        }
+      }
+    } else if (mic.getLevel() > ampMin && frecuenciaSuavizada > frecMinVoz && frecuenciaSuavizada < frecMaxVoz) {
       let frecMedia = frecMinVoz + (frecMaxVoz - frecMinVoz) / 2;
       let numColumnasCentrales;
       if (columnas === 6) {
@@ -207,12 +228,11 @@ function draw() {
       } else {
         numColumnasCentrales = 4;
       }
-
-      if (frecuencia < frecMedia) {
+      if (frecuenciaSuavizada < frecMedia) {
         let indiceInicioCentral = (columnas - numColumnasCentrales) / 2;
         for (let j = indiceInicioCentral; j < indiceInicioCentral + numColumnasCentrales; j++) {
             for (let i = 0; i < filas; i++) {
-                if (random(1) < probabilidadDeDibujar) { 
+                if (random(1) < probabilidadDeDibujar) {
                     calcularLinea(i, j);
                 }
             }
@@ -221,14 +241,14 @@ function draw() {
         let numColumnasLaterales = (columnas - numColumnasCentrales) / 2;
         for (let j = 0; j < numColumnasLaterales; j++) {
             for (let i = 0; i < filas; i++) {
-                if (random(1) < probabilidadDeDibujar) { 
+                if (random(1) < probabilidadDeDibujar) {
                     calcularLinea(i, j);
                 }
             }
         }
         for (let j = columnas - numColumnasLaterales; j < columnas; j++) {
             for (let i = 0; i < filas; i++) {
-                if (random(1) < probabilidadDeDibujar) { 
+                if (random(1) < probabilidadDeDibujar) {
                     calcularLinea(i, j);
                 }
             }

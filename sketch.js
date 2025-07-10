@@ -9,7 +9,7 @@ let coloresCeldas = [];
 let lineasDesprolijas = [];
 let conteoLineasPorCelda = [];
 
-let maxLineasPorCelda = 150;
+let maxLineasPorCelda = 80;
 let minDesvio = 5;
 let maxDesvio = 50;
 let margenBorde = 0.3;

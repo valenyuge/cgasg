@@ -13,6 +13,8 @@ let maxDesvio = 50;
 let margenBorde = 0.3;
 let margenExtra = 20;
 
+let probabilidadDeDibujar = 0.5;
+
 let marginX;
 let marginY;
 
@@ -28,7 +30,7 @@ let frecMaxVoz = 300;
 let ampMin = 0.01;
 let frecMinSilbido = 1200;
 
-let umbralGraveParaAplauso = 120; 
+let umbralGraveParaAplauso = 140; 
 let umbralAgudoParaAplauso = 30;  
 let ultimoTiempoAplauso = 0;
 let cooldownAplauso = 500;
@@ -65,7 +67,6 @@ function mousePressed() {
 function iniciarDeteccion() {
   const modelURL = 'https://cdn.jsdelivr.net/gh/ml5js/ml5-data-and-models/models/pitch-detection/crepe/';
   pitch = ml5.pitchDetection(modelURL, audioContext, mic.stream, modeloCargado);
-  
   fft = new p5.FFT();
   fft.setInput(mic);
 }
@@ -86,7 +87,7 @@ function reconfigurarYReiniciarGrilla() {
   let dimensionElegida = random(dimensionesPosibles);
   filas = dimensionElegida[0];
   columnas = dimensionElegida[1];
-
+  
   let marginX_inicial = 100;
   let marginY_inicial = 100;
   let areaDibujoAncho = width - marginX_inicial * 2;
@@ -188,8 +189,8 @@ function draw() {
     fft.analyze();
     let energiaGrave = fft.getEnergy(40, 800);
     let energiaAguda = fft.getEnergy(1500, 5000);
-
-    if (energiaGrave > umbralGraveParaAplauso && energiaAguda > umbralAgudoParaAplauso && frecuencia === 0 && millis() - ultimoTiempoAplauso > cooldownAplauso) {
+    
+    if (energiaGrave > umbralGraveParaAplauso && energiaAguda > umbralAgudoParaAplauso && millis() - ultimoTiempoAplauso > cooldownAplauso) {
       reconfigurarYReiniciarGrilla();
       ultimoTiempoAplauso = millis();
     } else if (frecuencia > frecMinSilbido) {
@@ -198,6 +199,7 @@ function draw() {
             lineasDesprolijas.pop();
         }
     } else if (mic.getLevel() > ampMin && frecuencia > frecMinVoz && frecuencia < frecMaxVoz) {
+      
       let frecMedia = frecMinVoz + (frecMaxVoz - frecMinVoz) / 2;
       let numColumnasCentrales;
       if (columnas === 6) {
@@ -205,23 +207,30 @@ function draw() {
       } else {
         numColumnasCentrales = 4;
       }
+
       if (frecuencia < frecMedia) {
         let indiceInicioCentral = (columnas - numColumnasCentrales) / 2;
         for (let j = indiceInicioCentral; j < indiceInicioCentral + numColumnasCentrales; j++) {
             for (let i = 0; i < filas; i++) {
-                calcularLinea(i, j);
+                if (random(1) < probabilidadDeDibujar) { 
+                    calcularLinea(i, j);
+                }
             }
         }
       } else {
         let numColumnasLaterales = (columnas - numColumnasCentrales) / 2;
         for (let j = 0; j < numColumnasLaterales; j++) {
             for (let i = 0; i < filas; i++) {
-                calcularLinea(i, j);
+                if (random(1) < probabilidadDeDibujar) { 
+                    calcularLinea(i, j);
+                }
             }
         }
         for (let j = columnas - numColumnasLaterales; j < columnas; j++) {
             for (let i = 0; i < filas; i++) {
-                calcularLinea(i, j);
+                if (random(1) < probabilidadDeDibujar) { 
+                    calcularLinea(i, j);
+                }
             }
         }
       }

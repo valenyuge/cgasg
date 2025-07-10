@@ -15,7 +15,8 @@ let maxDesvio = 50;
 let margenBorde = 0.3;
 let margenExtra = 20;
 let probabilidadDeDibujar = 0.4;
-let dibujarCuadradosBase; 
+let dibujarCuadradosBase;
+let modoMapeoVoz; // <-- NUEVO: Para decidir el modo de dibujo
 
 let marginX;
 let marginY;
@@ -29,6 +30,7 @@ let frecuencia = 0;
 let frecuenciaSuavizada = 0;
 let amortiguacionFrec = 0.8;
 
+// Parámetros de Control
 let frecMinVoz = 80;
 let frecMaxVoz = 300;
 let ampMin = 0.01;
@@ -93,8 +95,11 @@ function reconfigurarYReiniciarGrilla() {
   filas = dimensionElegida[0];
   columnas = dimensionElegida[1];
   
-  dibujarCuadradosBase = random(1) < 0.5; 
+  dibujarCuadradosBase = random(1) < 0.5;
 
+  // Decide al azar si el tono controla el eje X o el eje Y
+  modoMapeoVoz = floor(random(2)); // Será 0 o 1
+  
   let marginX_inicial = 100;
   let marginY_inicial = 100;
   let areaDibujoAncho = width - marginX_inicial * 2;
@@ -228,35 +233,55 @@ function draw() {
             }
         }
     } else if (mic.getLevel() > ampMin && frecuenciaSuavizada > frecMinVoz && frecuenciaSuavizada < frecMaxVoz) {
+      
       let frecMedia = frecMinVoz + (frecMaxVoz - frecMinVoz) / 2;
-      let numColumnasCentrales;
-      if (columnas === 6) {
-        numColumnasCentrales = 2;
-      } else {
-        numColumnasCentrales = 4;
-      }
-      if (frecuenciaSuavizada < frecMedia) {
-        let indiceInicioCentral = (columnas - numColumnasCentrales) / 2;
-        for (let j = indiceInicioCentral; j < indiceInicioCentral + numColumnasCentrales; j++) {
-            for (let i = 0; i < filas; i++) {
-                if (random(1) < probabilidadDeDibujar) {
-                    calcularLinea(i, j);
-                }
-            }
+      
+      if (modoMapeoVoz === 0) {
+        let numColumnasCentrales;
+        if (columnas === 6) { numColumnasCentrales = 2; } else { numColumnasCentrales = 4; }
+
+        if (frecuenciaSuavizada < frecMedia) {
+          let indiceInicioCentral = (columnas - numColumnasCentrales) / 2;
+          for (let j = indiceInicioCentral; j < indiceInicioCentral + numColumnasCentrales; j++) {
+              for (let i = 0; i < filas; i++) {
+                  if (random(1) < probabilidadDeDibujar) { calcularLinea(i, j); }
+              }
+          }
+        } else {
+          let numColumnasLaterales = (columnas - numColumnasCentrales) / 2;
+          for (let j = 0; j < numColumnasLaterales; j++) {
+              for (let i = 0; i < filas; i++) {
+                  if (random(1) < probabilidadDeDibujar) { calcularLinea(i, j); }
+              }
+          }
+          for (let j = columnas - numColumnasLaterales; j < columnas; j++) {
+              for (let i = 0; i < filas; i++) {
+                  if (random(1) < probabilidadDeDibujar) { calcularLinea(i, j); }
+              }
+          }
         }
       } else {
-        let numColumnasLaterales = (columnas - numColumnasCentrales) / 2;
-        for (let j = 0; j < numColumnasLaterales; j++) {
-            for (let i = 0; i < filas; i++) {
-                if (random(1) < probabilidadDeDibujar) {
-                    calcularLinea(i, j);
+
+        let numFilasCentrales;
+        if (filas === 6) { numFilasCentrales = 2; } else { numFilasCentrales = 4; }
+        
+        if (frecuenciaSuavizada < frecMedia) {
+            let indiceInicioCentral = (filas - numFilasCentrales) / 2;
+            for (let i = indiceInicioCentral; i < indiceInicioCentral + numFilasCentrales; i++) {
+                for (let j = 0; j < columnas; j++) {
+                    if (random(1) < probabilidadDeDibujar) { calcularLinea(i, j); }
                 }
             }
-        }
-        for (let j = columnas - numColumnasLaterales; j < columnas; j++) {
-            for (let i = 0; i < filas; i++) {
-                if (random(1) < probabilidadDeDibujar) {
-                    calcularLinea(i, j);
+        } else {
+            let numFilasLaterales = (filas - numFilasCentrales) / 2;
+            for (let i = 0; i < numFilasLaterales; i++) {
+                for (let j = 0; j < columnas; j++) {
+                    if (random(1) < probabilidadDeDibujar) { calcularLinea(i, j); }
+                }
+            }
+            for (let i = filas - numFilasLaterales; i < filas; i++) {
+                for (let j = 0; j < columnas; j++) {
+                    if (random(1) < probabilidadDeDibujar) { calcularLinea(i, j); }
                 }
             }
         }

@@ -16,7 +16,7 @@ let margenBorde = 0.3;
 let margenExtra = 20;
 let probabilidadDeDibujar = 0.4;
 let dibujarCuadradosBase;
-let modoMapeoVoz; // <-- NUEVO: Para decidir el modo de dibujo
+let modoMapeoVoz; 
 
 let marginX;
 let marginY;
@@ -36,7 +36,7 @@ let frecMaxVoz = 300;
 let ampMin = 0.01;
 let frecMinSilbido = 1200;
 
-let umbralGraveParaAplauso = 140;
+let umbralGraveParaAplauso = 180;
 let umbralAgudoParaAplauso = 30;
 let ultimoTiempoAplauso = 0;
 let cooldownAplauso = 500;
@@ -97,8 +97,7 @@ function reconfigurarYReiniciarGrilla() {
   
   dibujarCuadradosBase = random(1) < 0.5;
 
-  // Decide al azar si el tono controla el eje X o el eje Y
-  modoMapeoVoz = floor(random(2)); // Será 0 o 1
+  modoMapeoVoz = floor(random(2)); 
   
   let marginX_inicial = 100;
   let marginY_inicial = 100;
